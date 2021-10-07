@@ -1,0 +1,12 @@
+.vs/
+bin/
+obj/
+lib/
+packages/
+*.user
+.nuget.apikey
+publish/
+*.sublime-workspace
+docs/_build/
+
+Tapeti.Cmd/Properties/launchSettings.json

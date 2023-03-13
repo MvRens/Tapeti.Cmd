@@ -226,7 +226,8 @@ namespace Tapeti.Cmd.Serialization
 
                     // This assumes header values are UTF-8 encoded strings. This is true for Tapeti.
                     foreach (var (key, value) in fromProperties.Headers)
-                        Headers.Add(key, Encoding.UTF8.GetString((byte[])value));
+                        if (!key.StartsWith("x-"))
+                            Headers.Add(key, Encoding.UTF8.GetString((byte[])value));
                 }
                 else
                     Headers = null;

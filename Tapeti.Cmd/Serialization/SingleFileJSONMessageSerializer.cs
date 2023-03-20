@@ -224,9 +224,12 @@ namespace Tapeti.Cmd.Serialization
                 {
                     Headers = new Dictionary<string, string>();
 
-                    // This assumes header values are UTF-8 encoded strings. This is true for Tapeti.
+                    // Most headers are UTF-8 encoded strings but some are not. Like x-death, which
+                    // is an array / dictionary. For proper export/import support we'd need to
+                    // find out what the AMQP spec supports and implement that. For now, simply ignore those.
                     foreach (var (key, value) in fromProperties.Headers)
-                        Headers.Add(key, Encoding.UTF8.GetString((byte[])value));
+                        if (value is byte[] byteArrayValue)
+                            Headers.Add(key, Encoding.UTF8.GetString(byteArrayValue));
                 }
                 else
                     Headers = null;

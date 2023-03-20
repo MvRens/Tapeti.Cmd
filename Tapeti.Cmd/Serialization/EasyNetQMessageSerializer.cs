@@ -316,14 +316,18 @@ namespace Tapeti.Cmd.Serialization
 
             public Message ToMessage()
             {
-                return new()
+                return new Message
                 {
                     //ConsumerTag = 
                     DeliveryTag = DeliverTag,
                     Redelivered = Redelivered,
                     Exchange = Exchange,
                     RoutingKey = RoutingKey,
-                    Queue = Queue
+                    Queue = Queue,
+
+                    // These will be supplied later as they are in different files
+                    Properties = null,
+                    Body = null
                 };
             }
         }

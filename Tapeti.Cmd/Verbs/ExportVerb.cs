@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using CommandLine;
@@ -28,12 +28,24 @@ namespace Tapeti.Cmd.Verbs
 
         [Option('n', "maxcount", HelpText = "(Default: all) Maximum number of messages to retrieve from the queue.")]
         public int? MaxCount { get; set; }
+
+        [Option('c', "confirm", HelpText = "If the remove option is not set and the queue contains a large number of messages, RabbitMQ may run out of memory while exporting and a confirmation is required. Specify this option to automatically confirm.")]
+        public bool ConfirmLargeQueue { get; set; }
+
+        [Option("autoack", HelpText = "Acknowledge the messages before they are written to disk to increase performance at the cost of losing messages in case of an error. USE AT YOUR OWN RISK. Only valid in combination with the 'remove' option.")]
+        public bool AutoAck { get; set; }
     }
     
 
     public class ExportVerb : IVerbExecuter
     {
         private readonly ExportOptions options;
+
+        /// <summary>
+        /// If the amount of message that need to be consumed (and thus kept unacked) exceed this treshold, a confirmation is required.
+        /// Only relevant is the remove parameter is not specified.
+        /// </summary>
+        private const int WarningTreshold = 500000;
 
         
         public ExportVerb(ExportOptions options)
@@ -54,14 +66,22 @@ namespace Tapeti.Cmd.Verbs
             using var connection = factory.CreateConnection();
             using var channel = connection.CreateModel();
 
-            var totalCount = (int)channel.MessageCount(options.QueueName);
+            var consumeCount = (int)channel.MessageCount(options.QueueName);
+            var totalCount = consumeCount;
 
             var skip = Math.Max(options.Skip, 0);
             if (skip > 0)
                 totalCount -= Math.Min(skip, totalCount);
-            
+
             if (options.MaxCount.HasValue && options.MaxCount.Value < totalCount)
+            {
+                consumeCount -= totalCount - options.MaxCount.Value;
                 totalCount = options.MaxCount.Value;
+            }
+
+
+            if (consumeCount >= WarningTreshold && !options.RemoveMessages && !options.ConfirmLargeQueue)
+                consoleWriter.ConfirmYesNo($"Queue contains {totalCount} messages and the '--remove' option is not specified. This may lead to high memory usage on the RabbitMQ server. Do you want to continue?");
 
             consoleWriter.WriteLine($"Exporting {totalCount} message{(totalCount != 1 ? "s" : "")} (actual number may differ if queue has active consumers or publishers)");
             var messageCount = 0;
@@ -70,7 +90,7 @@ namespace Tapeti.Cmd.Verbs
             {
                 while (!console.Cancelled && (!options.MaxCount.HasValue || messageCount < options.MaxCount.Value))
                 {
-                    var result = channel.BasicGet(options.QueueName, false);
+                    var result = channel.BasicGet(options.QueueName, options.RemoveMessages && options.AutoAck);
                     if (result == null)
                         // No more messages on the queue
                         break;
@@ -92,7 +112,7 @@ namespace Tapeti.Cmd.Verbs
                             Body = result.Body.ToArray()
                         });
 
-                        if (options.RemoveMessages)
+                        if (options.RemoveMessages && !options.AutoAck)
                             channel.BasicAck(result.DeliveryTag, false);
 
                         progressBar.Report(messageCount);

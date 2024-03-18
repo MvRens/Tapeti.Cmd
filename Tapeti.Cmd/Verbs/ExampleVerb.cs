@@ -42,12 +42,15 @@ namespace Tapeti.Cmd.Verbs
                     DeliveryMode = 2,
                     Headers = new Dictionary<string, object>
                     {
-                        { "classType", Encoding.UTF8.GetBytes("Tapeti.Cmd.Example:Tapeti.Cmd") }
+                        {
+                            "classType", Encoding.UTF8.GetBytes("Tapeti.Cmd.Example:Tapeti.Cmd")
+                        }
                     },
                     ReplyTo = "reply.queue",
                     Timestamp = new AmqpTimestamp(new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds())
                 },
-                Body = Encoding.UTF8.GetBytes("{ \"Hello\": \"world!\" }")
+                Body = Encoding.UTF8.GetBytes("{ \"Hello\": \"world!\" }"),
+                Redelivered = false
             });
         }
     }

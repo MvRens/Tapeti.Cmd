@@ -2,7 +2,7 @@
 ## Tapeti.Cmd
 This repository is part of Tapeti, a RabbitMQ client framework for microservices.
 
-Refer to the [main Tapeti repository](https://github.com/MvRens/Tapeti) for more information.
+Refer to the [main Tapeti repository](https://codeberg.org/Tapeti/Tapeti) for more information.
 
 
 ## Documentation

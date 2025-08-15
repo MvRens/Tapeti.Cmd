@@ -1,3 +1,5 @@
+> [!WARNING]
+> This project's development has moved to CodeBerg (https://codeberg.org/Tapeti/Tapeti.Cmd)
 
 ## Tapeti.Cmd
 This repository is part of Tapeti, a RabbitMQ client framework for microservices.
